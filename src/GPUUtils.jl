@@ -5,7 +5,7 @@ import CuArrays, CUDAdrv
 
 export  CPU,
         GPU,
-        whichdevice
+        whichdevice,
         @define_cu, 
         @thread_local_index, 
         @total_threads_per_block, 
