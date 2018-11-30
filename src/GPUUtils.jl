@@ -1,9 +1,12 @@
 module GPUUtils
 
-using CUDAnative, InteractiveUtils
+using CUDAnative, InteractiveUtils, GPUArrays
 import CuArrays, CUDAdrv
 
-export  @define_cu, 
+export  CPU,
+        GPU,
+        whichdevice
+        @define_cu, 
         @thread_local_index, 
         @total_threads_per_block, 
         @block_index, 
@@ -11,6 +14,10 @@ export  @define_cu,
         @thread_global_index, 
         @total_threads, 
         callkernel
+
+struct CPU end
+struct GPU end
+whichdevice(s::AbstractArray) = s isa GPUArray ? GPU() : CPU()
 
 macro define_cu(T, fields...)
     all_fields = Tuple(fieldnames(eval(T)))
