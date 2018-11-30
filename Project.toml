@@ -1,5 +1,5 @@
 name = "GPUUtils"
-uuid = " b00d8864-7981-5727-8659-fd9f83287331"
+uuid = "b00d8864-7981-5727-8659-fd9f83287331"
 authors = ["mohamed82008 <mohamed82008@gmail.com>"]
 
 [deps]
