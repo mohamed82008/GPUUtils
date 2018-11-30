@@ -1,7 +1,6 @@
 name = "GPUUtils"
 uuid = "920973f0-f3ea-11e8-188f-e7f6964b5b18"
 authors = ["mohamed82008 <mohamed82008@gmail.com>"]
-version = "0.1.0"
 
 [deps]
 CUDAdrv = "c5f51814-7f29-56b8-a69c-e4d8f6be1fde"
