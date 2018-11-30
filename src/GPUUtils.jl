@@ -19,12 +19,16 @@ struct CPU end
 struct GPU end
 whichdevice(s::AbstractArray) = s isa GPUArray ? GPU() : CPU()
 
+function getfieldnames end
+function cufieldnames end
+
 macro define_cu(T, fields...)
-    all_fields = Tuple(fieldnames(eval(T)))
-    args = Expr[]
-    for fn in all_fields
-        push!(args, :(_cu(s, s.$fn, $(Val(fn)))))
-    end
+    _define_cu(T, fields...)
+end
+
+function _define_cu(T, fields...)
+    all_fields = gensym()
+    args = gensym()
     if eltype(fields) <: QuoteNode
         field_syms = Tuple(field.value for field in fields)
     elseif eltype(fields) <: Symbol
@@ -33,32 +37,30 @@ macro define_cu(T, fields...)
         throw("Unsupported fields.")
     end
     esc(quote
-        @inline getfieldnames(::Type{<:$T}) = $all_fields
-        @inline cufieldnames(::Type{<:$T}) = $field_syms
-        @inline function CuArrays.cu(s::$T)
-            $T($(args...))
+        $all_fields = Tuple(fieldnames($T))
+        @eval @inline GPUUtils.getfieldnames(::Type{<:$T}) = $(Expr(:$, all_fields))
+        @inline GPUUtils.cufieldnames(::Type{<:$T}) = $field_syms
+        $args = Expr[]
+        for fn in $all_fields
+            push!($args, :(GPUUtils._cu(s, s.$fn, $(Val(fn)))))
+        end
+        @eval begin
+            function CuArrays.cu(s::$T)
+                $T($(Expr(:$, Expr(:..., args))))
+            end
         end
     end)
 end
 
-@generated function _cu(s::T, f::F, ::Val{fn}) where {T, F, fn}
-    if fn ∈ cufieldnames(T)
+function _cu(s::T, f::F, ::Val{fn}) where {T, F, fn}
+    if fn ∈ GPUUtils.cufieldnames(T)
         if F <: AbstractArray
-            quote 
-                $(Expr(:meta, :inline))
-                CuArray(f)
-            end
+            CuArrays.CuArray(f)
         else
-            quote
-                $(Expr(:meta, :inline))
-                cu(f)
-            end
+            CuArrays.cu(f)
         end
     else
-        quote 
-            $(Expr(:meta, :inline))
-            f
-        end
+        f
     end
 end
 
